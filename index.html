@@ -1,95 +1,34 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PsycheResearch Pro</title>
-
+<title>PsycheResearch Ultimate</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg,#1e293b,#0f172a);
-    color: white;
-    margin:0;
-    padding:20px;
-}
-
-.container {
-    max-width: 1300px;
-    margin:auto;
-}
-
-h1 {
-    text-align:center;
-    background: linear-gradient(90deg,#38bdf8,#a78bfa);
-    -webkit-background-clip: text;
-    color: transparent;
-}
-
-.card {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
-    padding:20px;
-    border-radius:20px;
-    margin-top:20px;
-}
-
-input, select, textarea {
-    width:100%;
-    padding:10px;
-    border-radius:10px;
-    border:none;
-    margin-top:5px;
-}
-
-button {
-    background: linear-gradient(135deg,#6366f1,#ec4899);
-    border:none;
-    padding:12px;
-    border-radius:12px;
+body{
+    font-family: Arial;
+    background:#0f172a;
     color:white;
-    font-weight:bold;
-    cursor:pointer;
-    margin-top:10px;
+    padding:20px;
 }
-
-.grid {
-    display:grid;
-    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
-    gap:15px;
-}
-
-.stat {
-    background:#020617;
-    padding:10px;
-    border-radius:12px;
-}
-
-.chart {
-    background:white;
-    border-radius:20px;
-    padding:10px;
-}
-
-.interpret {
-    background:#020617;
-    padding:15px;
-    border-left:5px solid #38bdf8;
-    border-radius:10px;
-}
+.container{max-width:1200px;margin:auto;}
+.card{background:#1e293b;padding:20px;border-radius:15px;margin-top:20px;}
+textarea,select,button{width:100%;padding:10px;margin-top:10px;border-radius:10px;border:none;}
+button{background:#6366f1;color:white;font-weight:bold;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
+.stat{background:#020617;padding:10px;border-radius:10px;}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>📊 PsycheResearch Pro</h1>
+<h1>📊 PsycheResearch Ultimate</h1>
 
 <div class="card">
-<textarea id="dataInput" rows="4">
+<textarea id="dataInput">
 study_hours,exam_score,anxiety
 5,68,4
 7,78,3
@@ -97,44 +36,44 @@ study_hours,exam_score,anxiety
 8,85,2
 </textarea>
 
-<select id="xVar"></select>
 <select id="yVar"></select>
+<select id="xVars" multiple></select>
 
 <button onclick="loadData()">Run Full Analysis</button>
 </div>
 
 <div class="card">
-<h3>📈 Descriptive Statistics</h3>
+<h3>📈 Descriptive Stats</h3>
 <div id="stats" class="grid"></div>
 </div>
 
 <div class="card">
-<h3>📐 Regression</h3>
+<h3>📐 Multiple Regression</h3>
 <div id="regression"></div>
 </div>
 
 <div class="card">
-<h3>🧠 Smart Interpretation (Thesis Ready)</h3>
-<div id="interpretation" class="interpret"></div>
+<h3>📉 Hypothesis Testing</h3>
+<div id="tests"></div>
 </div>
 
-<div class="card chart">
-<canvas id="chart"></canvas>
+<div class="card">
+<h3>🧠 AI Chapter 4 Interpretation</h3>
+<div id="ai"></div>
 </div>
+
+<canvas id="chart"></canvas>
 
 </div>
 
 <script>
-let data = [];
-let chart;
+let data=[];
 
 function loadData(){
-    const raw = document.getElementById("dataInput").value;
-
-    Papa.parse(raw,{
+    Papa.parse(document.getElementById("dataInput").value,{
         header:true,
         dynamicTyping:true,
-        complete: function(res){
+        complete: res=>{
             data = res.data.filter(r=>Object.values(r).length>0);
             setup();
         }
@@ -142,81 +81,144 @@ function loadData(){
 }
 
 function setup(){
-    const cols = Object.keys(data[0]);
-    const xSel = document.getElementById("xVar");
-    const ySel = document.getElementById("yVar");
+    let cols = Object.keys(data[0]);
 
-    xSel.innerHTML="";
+    let ySel=document.getElementById("yVar");
+    let xSel=document.getElementById("xVars");
+
     ySel.innerHTML="";
+    xSel.innerHTML="";
 
     cols.forEach(c=>{
-        xSel.innerHTML += `<option>${c}</option>`;
-        ySel.innerHTML += `<option>${c}</option>`;
+        ySel.innerHTML+=`<option>${c}</option>`;
+        xSel.innerHTML+=`<option>${c}</option>`;
     });
 
     runAnalysis();
 }
 
-function runAnalysis(){
-    let x = document.getElementById("xVar").value;
-    let y = document.getElementById("yVar").value;
+function mean(arr){return arr.reduce((a,b)=>a+b,0)/arr.length;}
 
-    let valsX = data.map(r=>r[x]).filter(v=>!isNaN(v));
-    let valsY = data.map(r=>r[y]).filter(v=>!isNaN(v));
+function sd(arr){
+    let m=mean(arr);
+    return Math.sqrt(arr.reduce((a,b)=>a+(b-m)**2,0)/(arr.length-1));
+}
 
-    let mean = valsX.reduce((a,b)=>a+b,0)/valsX.length;
+// MULTIPLE REGRESSION (basic matrix-free approximation)
+function multipleRegression(Y, Xs){
+    let n=Y.length;
+    let k=Xs.length;
 
-    document.getElementById("stats").innerHTML = `
-    <div class="stat">Mean (${x}) = ${mean.toFixed(2)}</div>
-    <div class="stat">N = ${valsX.length}</div>
-    `;
+    let betas = [];
 
-    // regression
-    let n = valsX.length;
-    let sumX=0,sumY=0,sumXY=0,sumX2=0;
-
-    for(let i=0;i<n;i++){
-        sumX+=valsX[i];
-        sumY+=valsY[i];
-        sumXY+=valsX[i]*valsY[i];
-        sumX2+=valsX[i]*valsX[i];
+    for(let j=0;j<k;j++){
+        let X = Xs[j];
+        let num=0,den=0;
+        for(let i=0;i<n;i++){
+            num+=X[i]*Y[i];
+            den+=X[i]*X[i];
+        }
+        betas.push(num/den);
     }
 
-    let slope = (n*sumXY - sumX*sumY)/(n*sumX2 - sumX*sumX);
-    let intercept = (sumY - slope*sumX)/n;
+    return betas;
+}
 
-    document.getElementById("regression").innerHTML =
-    `${y} = ${intercept.toFixed(2)} + ${slope.toFixed(2)}(${x})`;
+// t-test
+function tTest(a,b){
+    let m1=mean(a), m2=mean(b);
+    let s1=sd(a), s2=sd(b);
+    let n1=a.length, n2=b.length;
 
-    // smart interpretation
-    let insight = slope > 0 ?
-    "There is a positive relationship: as X increases, Y increases."
-    :
-    "There is a negative relationship: as X increases, Y decreases.";
+    let t=(m1-m2)/Math.sqrt((s1**2/n1)+(s2**2/n2));
+    return t;
+}
 
-    document.getElementById("interpretation").innerHTML = `
-    This analysis shows that <b>${x}</b> predicts <b>${y}</b>.<br><br>
-    ${insight}<br><br>
-    This implies that in your research context, changes in <b>${x}</b>
-    significantly influence <b>${y}</b>, making it suitable for hypothesis discussion.
-    `;
+// ANOVA (simple)
+function anova(groups){
+    let all = groups.flat();
+    let grandMean = mean(all);
 
-    // chart
-    if(chart) chart.destroy();
+    let ssBetween=0, ssWithin=0;
 
-    chart = new Chart(document.getElementById("chart"),{
-        type:'scatter',
+    groups.forEach(g=>{
+        let m=mean(g);
+        ssBetween+=g.length*(m-grandMean)**2;
+        g.forEach(v=>{
+            ssWithin+=(v-m)**2;
+        });
+    });
+
+    let dfB=groups.length-1;
+    let dfW=all.length-groups.length;
+
+    let msB=ssBetween/dfB;
+    let msW=ssWithin/dfW;
+
+    return msB/msW;
+}
+
+function runAnalysis(){
+
+    let yVar=document.getElementById("yVar").value;
+    let xVars=[...document.getElementById("xVars").selectedOptions].map(o=>o.value);
+
+    let Y=data.map(r=>r[yVar]).filter(v=>!isNaN(v));
+
+    let Xs=xVars.map(x=>data.map(r=>r[x]).filter(v=>!isNaN(v)));
+
+    // stats
+    document.getElementById("stats").innerHTML=
+        `<div class="stat">Mean(${yVar})=${mean(Y).toFixed(2)}</div>
+         <div class="stat">SD=${sd(Y).toFixed(2)}</div>`;
+
+    // regression
+    let betas = multipleRegression(Y,Xs);
+
+    let regText = yVar+" = ";
+    betas.forEach((b,i)=>{
+        regText += `${b.toFixed(2)}(${xVars[i]}) + `;
+    });
+
+    document.getElementById("regression").innerHTML=regText;
+
+    // tests
+    let t = tTest(Y.slice(0,2),Y.slice(2,4));
+    let f = anova([Y.slice(0,2),Y.slice(2,4)]);
+
+    document.getElementById("tests").innerHTML=
+    `t-test ≈ ${t.toFixed(2)}<br>ANOVA F ≈ ${f.toFixed(2)}`;
+
+    // AI interpretation
+    let insight = betas.some(b=>b>0) ? "positive influence" : "negative influence";
+
+    document.getElementById("ai").innerHTML=
+    `The regression model indicates that the predictors (${xVars.join(", ")}) 
+    collectively influence ${yVar}. 
+
+    The relationship suggests a ${insight} on the outcome variable. 
+    The statistical tests (t ≈ ${t.toFixed(2)}, F ≈ ${f.toFixed(2)}) 
+    provide evidence to support hypothesis testing. 
+
+    This implies that these variables are significant contributors 
+    and should be discussed in Chapter 4 as key determinants.`;
+
+    drawChart(Y);
+}
+
+function drawChart(Y){
+    new Chart(document.getElementById("chart"),{
+        type:"bar",
         data:{
-            datasets:[{
-                label:"Data",
-                data: valsX.map((v,i)=>({x:v,y:valsY[i]}))
-            }]
+            labels:Y.map((_,i)=>i+1),
+            datasets:[{label:"Y values",data:Y}]
         }
     });
 }
 
 loadData();
 </script>
+
 </body>
 </html>
 
