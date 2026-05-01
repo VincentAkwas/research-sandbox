@@ -29,7 +29,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             text-align: center;
             margin-bottom: 32px;
@@ -61,7 +60,6 @@
             margin-top: 8px;
         }
 
-        /* Controls Grid */
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -75,7 +73,7 @@
 
         .control-group {
             flex: 1;
-            min-width: 200px;
+            min-width: 180px;
         }
 
         .control-group label {
@@ -127,13 +125,6 @@
             border: 1px solid #e2e8f0;
         }
 
-        .btn-secondary:hover {
-            background: #e2e8f0;
-            transform: translateY(-2px);
-            box-shadow: none;
-        }
-
-        /* Data Table */
         .section {
             background: white;
             border-radius: 24px;
@@ -174,7 +165,6 @@
             top: 0;
         }
 
-        /* Stats grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -198,7 +188,6 @@
             overflow-x: auto;
         }
 
-        /* Charts */
         .charts-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -222,8 +211,8 @@
             padding: 20px;
             border-radius: 20px;
             margin-top: 20px;
-            font-family: monospace;
             font-size: 14px;
+            line-height: 1.8;
         }
 
         .footer {
@@ -241,6 +230,11 @@
             margin-top: 12px;
             font-size: 13px;
         }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+        }
     </style>
 </head>
 <body>
@@ -248,7 +242,7 @@
     <div class="header">
         <div class="badge">📊 Research Methodology Lab</div>
         <h1>PsycheResearch · Data Sandbox</h1>
-        <div class="sub">Upload CSV/Excel • Type Data • Regression • Visualisation</div>
+        <div class="sub">Upload CSV/Excel · Type Data · Regression · Visualisation</div>
     </div>
 
     <div class="controls">
@@ -258,7 +252,7 @@
         </div>
         <div class="control-group">
             <label>✏️ Or Paste/Type Data (CSV format)</label>
-            <textarea id="rawDataInput" rows="2" placeholder="x,y,group&#10;1.2,3.4,A&#10;2.3,4.5,B"></textarea>
+            <textarea id="rawDataInput" rows="2" placeholder="study_hours,exam_score,anxiety&#10;5,68,4&#10;7,78,3&#10;3,55,7"></textarea>
         </div>
         <div class="control-group">
             <label>🎯 X Variable (predictor)</label>
@@ -274,13 +268,11 @@
         </div>
     </div>
 
-    <!-- Data Preview -->
     <div class="section" id="dataPreviewSection" style="display:none;">
         <h3>📋 Data Preview (first 100 rows)</h3>
         <div class="table-wrapper" id="dataTable"></div>
     </div>
 
-    <!-- Descriptive Stats + Correlation -->
     <div class="section" id="statsSection" style="display:none;">
         <h3>📈 Descriptive Statistics</h3>
         <div id="descriptiveStats" class="stats-grid"></div>
@@ -288,13 +280,11 @@
         <div id="correlationMatrix" class="corr-matrix"></div>
     </div>
 
-    <!-- Regression -->
     <div class="section" id="regressionSection" style="display:none;">
-        <h3>📐 Linear Regression: <span id="regressionTitle">X → Y</span></h3>
+        <h3>📐 Linear Regression: <span id="regressionTitle">Select X and Y above</span></h3>
         <div id="regressionOutput"></div>
     </div>
 
-    <!-- Visualisations -->
     <div class="section" id="vizSection" style="display:none;">
         <h3>📊 Visualisations</h3>
         <div class="charts-row">
@@ -314,18 +304,16 @@
     </div>
 
     <div class="footer">
-        🔬 Built for Research Methodology · Upload any CSV/Excel or type data · Supports regression, correlation, and visualisation
+        🔬 Built for Research Methodology · Upload any CSV/Excel or type data · Select X/Y from dropdowns to update regression instantly
     </div>
 </div>
 
 <script>
-    let currentData = [];      // array of objects
+    let currentData = [];
     let currentColumns = [];
-
-    // references to charts
     let scatterChart, histXChart, histYChart;
 
-    // Helper: convert uploaded file
+    // File upload handler
     document.getElementById('fileUpload').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -336,7 +324,7 @@
                 dynamicTyping: true,
                 complete: function(results) {
                     if (results.data && results.data.length) {
-                        currentData = results.data;
+                        currentData = results.data.filter(row => Object.values(row).some(v => v !== null && v !== ""));
                         updateColumnsAndUI();
                     } else {
                         alert('No data found in CSV');
@@ -352,7 +340,7 @@
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const json = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
                 if (json.length) {
-                    currentData = json;
+                    currentData = json.filter(row => Object.values(row).some(v => v !== null && v !== ""));
                     updateColumnsAndUI();
                 } else {
                     alert('No data in Excel sheet');
@@ -374,7 +362,7 @@
                 skipEmptyLines: true,
                 complete: function(results) {
                     if (results.data && results.data.length) {
-                        currentData = results.data;
+                        currentData = results.data.filter(row => Object.values(row).some(v => v !== null && v !== ""));
                         updateColumnsAndUI();
                     } else {
                         alert('Invalid CSV format');
@@ -384,39 +372,65 @@
         } else if (currentData.length === 0) {
             alert('Please upload a file or paste CSV data first.');
         } else {
-            updateColumnsAndUI(); // just refresh with existing
+            updateColumnsAndUI();
         }
     });
 
+    // Update UI when data changes
     function updateColumnsAndUI() {
-        if (!currentData.length) return;
+        if (!currentData.length) {
+            alert('No valid data loaded');
+            return;
+        }
+        
         currentColumns = Object.keys(currentData[0]).filter(k => k !== undefined);
         if (currentColumns.length === 0) {
             alert('No valid columns found');
             return;
         }
 
-        // populate dropdowns with numeric columns only for regression
+        // Find numeric columns
         const numericCols = currentColumns.filter(col => {
             return currentData.some(row => typeof row[col] === 'number' && !isNaN(row[col]));
         });
+
         const xSelect = document.getElementById('xVar');
         const ySelect = document.getElementById('yVar');
+        
         xSelect.innerHTML = '<option value="">-- Select X (predictor) --</option>';
         ySelect.innerHTML = '<option value="">-- Select Y (outcome) --</option>';
+        
         numericCols.forEach(col => {
             xSelect.add(new Option(col, col));
             ySelect.add(new Option(col, col));
         });
 
-        // show preview
-        showDataPreview();
-        // compute everything
-        computeAllAnalysis();
+        // Set default selections if available
+        if (numericCols.length >= 2) {
+            xSelect.value = numericCols[0];
+            ySelect.value = numericCols[1];
+        }
+
+        // Add event listeners for dropdown changes
+        xSelect.onchange = function() { runFullAnalysis(); };
+        ySelect.onchange = function() { runFullAnalysis(); };
+
+        // Show all sections
         document.getElementById('dataPreviewSection').style.display = 'block';
         document.getElementById('statsSection').style.display = 'block';
         document.getElementById('regressionSection').style.display = 'block';
         document.getElementById('vizSection').style.display = 'block';
+        
+        // Run complete analysis
+        runFullAnalysis();
+    }
+
+    function runFullAnalysis() {
+        if (!currentData.length) return;
+        showDataPreview();
+        computeDescriptiveStats();
+        computeCorrelationMatrix();
+        runLinearRegression();
     }
 
     function showDataPreview() {
@@ -451,7 +465,8 @@
             const values = currentData.map(row => row[col]).filter(v => typeof v === 'number' && !isNaN(v));
             if (values.length === 0) continue;
             const mean = values.reduce((a,b) => a+b,0)/values.length;
-            const median = values.sort((a,b)=>a-b)[Math.floor(values.length/2)];
+            const sorted = [...values].sort((a,b)=>a-b);
+            const median = sorted[Math.floor(sorted.length/2)];
             const variance = values.reduce((a,b)=> a + Math.pow(b-mean,2),0)/(values.length-1);
             const sd = Math.sqrt(variance);
             const min = Math.min(...values);
@@ -516,62 +531,85 @@
     function runLinearRegression() {
         const xCol = document.getElementById('xVar').value;
         const yCol = document.getElementById('yVar').value;
+        
         if (!xCol || !yCol) {
-            document.getElementById('regressionOutput').innerHTML = '<div class="alert">⚠️ Please select X and Y variables for regression.</div>';
-            document.getElementById('regressionTitle').innerText = 'X → Y';
+            document.getElementById('regressionOutput').innerHTML = '<div class="alert">⚠️ Please select both X and Y variables from the dropdowns above.</div>';
+            document.getElementById('regressionTitle').innerHTML = 'Waiting for selection';
             return;
         }
+        
         document.getElementById('regressionTitle').innerHTML = `${escapeHtml(xCol)} → ${escapeHtml(yCol)}`;
-        const data = currentData.filter(row => typeof row[xCol] === 'number' && typeof row[yCol] === 'number' && !isNaN(row[xCol]) && !isNaN(row[yCol]));
-        if (data.length < 3) {
-            document.getElementById('regressionOutput').innerHTML = '<div class="alert">❌ Not enough numeric pairs for regression.</div>';
+        
+        // Filter valid pairs
+        const validPairs = currentData.filter(row => 
+            typeof row[xCol] === 'number' && !isNaN(row[xCol]) && 
+            typeof row[yCol] === 'number' && !isNaN(row[yCol])
+        );
+        
+        if (validPairs.length < 3) {
+            document.getElementById('regressionOutput').innerHTML = `<div class="alert">❌ Not enough valid numeric pairs for regression. Found ${validPairs.length} complete cases.</div>`;
             return;
         }
-        const n = data.length;
+        
+        const n = validPairs.length;
         let sumX=0, sumY=0, sumXY=0, sumX2=0;
-        for(let row of data) {
+        for(let row of validPairs) {
             let x = row[xCol], y = row[yCol];
             sumX += x; sumY += y; sumXY += x*y; sumX2 += x*x;
         }
+        
         const slope = (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX);
         const intercept = (sumY - slope*sumX)/n;
+        
         let ssRes=0, ssTot=0;
         const meanY = sumY/n;
-        for(let row of data) {
+        for(let row of validPairs) {
             let x=row[xCol], y=row[yCol];
             let pred = intercept + slope*x;
-            ssRes += (y-pred)**2;
-            ssTot += (y-meanY)**2;
+            ssRes += Math.pow(y-pred, 2);
+            ssTot += Math.pow(y-meanY, 2);
         }
         const r2 = 1 - ssRes/ssTot;
         const r = Math.sqrt(r2) * (slope>0?1:-1);
+        
         const regressionHtml = `
             <div class="regression-result">
-                <strong>📐 Equation:</strong> ${escapeHtml(yCol)} = ${intercept.toFixed(4)} + ${slope.toFixed(4)} × ${escapeHtml(xCol)}<br>
-                <strong>📊 R²:</strong> ${r2.toFixed(4)} &nbsp; | &nbsp; <strong>📈 Correlation r:</strong> ${r.toFixed(4)}<br>
-                <strong>🔍 Interpretation:</strong> For each 1-unit increase in ${escapeHtml(xCol)}, ${escapeHtml(yCol)} changes by ${slope.toFixed(4)} units.<br>
-                <strong>🧪 Goodness of fit:</strong> ${(r2*100).toFixed(1)}% of variance in Y explained by X.
+                <strong>📐 Regression Equation:</strong><br>
+                <span style="font-size:18px; font-weight:700;">${escapeHtml(yCol)} = ${intercept.toFixed(4)} + ${slope.toFixed(4)} × ${escapeHtml(xCol)}</span><br><br>
+                <strong>📊 Model Fit:</strong><br>
+                • R² = ${r2.toFixed(4)} (${(r2*100).toFixed(1)}% of variance explained)<br>
+                • Correlation r = ${r.toFixed(4)}<br>
+                • Number of observations = ${n}<br><br>
+                <strong>🔍 Interpretation:</strong><br>
+                For each 1-unit increase in <strong>${escapeHtml(xCol)}</strong>, <strong>${escapeHtml(yCol)}</strong> changes by <strong>${slope.toFixed(4)}</strong> units.
+                ${slope > 0 ? '📈 This is a positive relationship.' : '📉 This is a negative relationship.'}
             </div>
         `;
         document.getElementById('regressionOutput').innerHTML = regressionHtml;
-        updateCharts(xCol, yCol, intercept, slope);
+        
+        // Update charts
+        updateCharts(xCol, yCol, intercept, slope, validPairs);
     }
 
-    function updateCharts(xCol, yCol, intercept, slope) {
+    function updateCharts(xCol, yCol, intercept, slope, validPairs) {
+        // Get current selections
         const xVar = document.getElementById('xVar').value;
         const yVar = document.getElementById('yVar').value;
+        
         if (!xVar || !yVar) return;
-        const filtered = currentData.filter(row => typeof row[xVar] === 'number' && typeof row[yVar] === 'number' && !isNaN(row[xVar]) && !isNaN(row[yVar]));
-        const xVals = filtered.map(r => r[xVar]);
-        const yVals = filtered.map(r => r[yVar]);
+        
+        const xVals = validPairs.map(r => r[xVar]);
+        const yVals = validPairs.map(r => r[yVar]);
 
-        // scatter
+        // Destroy existing charts
         if (scatterChart) scatterChart.destroy();
+        if (histXChart) histXChart.destroy();
+        if (histYChart) histYChart.destroy();
+
+        // Scatter plot with regression line
         const ctxScatter = document.getElementById('scatterPlot').getContext('2d');
-        let scatterData = [];
-        for (let i=0; i<xVals.length; i++) {
-            scatterData.push({x: xVals[i], y: yVals[i]});
-        }
+        let scatterData = xVals.map((x, i) => ({x: x, y: yVals[i]}));
+        
         let linePoints = [];
         if (xVals.length && slope !== undefined && intercept !== undefined) {
             const minX = Math.min(...xVals);
@@ -579,57 +617,86 @@
             linePoints.push({x: minX, y: intercept + slope*minX});
             linePoints.push({x: maxX, y: intercept + slope*maxX});
         }
+        
         scatterChart = new Chart(ctxScatter, {
             type: 'scatter',
             data: {
                 datasets: [
-                    {label: `${xVar} vs ${yVar}`, data: scatterData, backgroundColor: '#8b5cf6', pointRadius: 5},
-                    {label: 'Regression Line', data: linePoints, type: 'line', borderColor: '#f59e0b', borderWidth: 3, fill: false, pointRadius: 0}
+                    {
+                        label: `${xVar} vs ${yVar}`,
+                        data: scatterData,
+                        backgroundColor: '#8b5cf6',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    },
+                    {
+                        label: 'Regression Line',
+                        data: linePoints,
+                        type: 'line',
+                        borderColor: '#f59e0b',
+                        borderWidth: 3,
+                        fill: false,
+                        pointRadius: 0
+                    }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${xVar}: ${ctx.parsed.x}, ${yVar}: ${ctx.parsed.y}` } } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${xVar}: ${ctx.parsed.x}, ${yVar}: ${ctx.parsed.y}`
+                        }
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: xVar } },
+                    y: { title: { display: true, text: yVar } }
+                }
+            }
         });
 
-        // histograms
-        if (histXChart) histXChart.destroy();
+        // Histogram for X
         const histXCtx = document.getElementById('histogramX').getContext('2d');
         const binsX = createHistogramBins(xVals);
         histXChart = new Chart(histXCtx, {
             type: 'bar',
-            data: { labels: binsX.labels, datasets: [{ label: `Frequency of ${xVar}`, data: binsX.counts, backgroundColor: '#3b82f6' }] },
-            options: { responsive: true }
+            data: {
+                labels: binsX.labels,
+                datasets: [{ label: `Frequency of ${xVar}`, data: binsX.counts, backgroundColor: '#3b82f6', borderRadius: 8 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'top' } } }
         });
 
-        if (histYChart) histYChart.destroy();
+        // Histogram for Y
         const histYCtx = document.getElementById('histogramY').getContext('2d');
         const binsY = createHistogramBins(yVals);
         histYChart = new Chart(histYCtx, {
             type: 'bar',
-            data: { labels: binsY.labels, datasets: [{ label: `Frequency of ${yVar}`, data: binsY.counts, backgroundColor: '#ec4899' }] },
-            options: { responsive: true }
+            data: {
+                labels: binsY.labels,
+                datasets: [{ label: `Frequency of ${yVar}`, data: binsY.counts, backgroundColor: '#ec4899', borderRadius: 8 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'top' } } }
         });
     }
 
-    function createHistogramBins(values, bins=10) {
-        if (!values.length) return {labels:[], counts:[]};
-        const min=Math.min(...values), max=Math.max(...values);
-        const step = (max-min)/bins;
+    function createHistogramBins(values, bins=8) {
+        if (!values.length) return {labels: [], counts: []};
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const step = (max - min) / bins;
         let counts = new Array(bins).fill(0);
         let labels = [];
-        for(let i=0; i<bins; i++) {
-            labels.push(`${(min+i*step).toFixed(2)}-${(min+(i+1)*step).toFixed(2)}`);
+        for(let i = 0; i < bins; i++) {
+            labels.push(`${(min + i*step).toFixed(2)}-${(min + (i+1)*step).toFixed(2)}`);
         }
         for(let v of values) {
-            let idx = Math.min(bins-1, Math.floor((v-min)/step));
-            if(idx>=0) counts[idx]++;
+            let idx = Math.min(bins-1, Math.floor((v - min) / step));
+            if(idx >= 0) counts[idx]++;
         }
         return {labels, counts};
-    }
-
-    function computeAllAnalysis() {
-        computeDescriptiveStats();
-        computeCorrelationMatrix();
-        runLinearRegression();
     }
 
     function escapeHtml(str) {
@@ -642,22 +709,33 @@
         });
     }
 
-    // initial demo data
+    // Load demo data on page load
     function loadDemo() {
         currentData = [
-            {study_hours: 5, exam_score: 68, motivation: 3.2},
-            {study_hours: 7, exam_score: 78, motivation: 4.1},
-            {study_hours: 3, exam_score: 55, motivation: 2.5},
-            {study_hours: 8, exam_score: 85, motivation: 4.8},
-            {study_hours: 4, exam_score: 62, motivation: 3.0},
-            {study_hours: 6, exam_score: 74, motivation: 3.9},
-            {study_hours: 9, exam_score: 92, motivation: 4.5},
-            {study_hours: 2, exam_score: 48, motivation: 2.0},
-            {study_hours: 5, exam_score: 70, motivation: 3.3},
-            {study_hours: 7, exam_score: 80, motivation: 4.2}
+            {study_hours: 5, exam_score: 68, anxiety_level: 4},
+            {study_hours: 7, exam_score: 78, anxiety_level: 3},
+            {study_hours: 3, exam_score: 55, anxiety_level: 7},
+            {study_hours: 8, exam_score: 85, anxiety_level: 2},
+            {study_hours: 4, exam_score: 62, anxiety_level: 5},
+            {study_hours: 6, exam_score: 74, anxiety_level: 3},
+            {study_hours: 9, exam_score: 92, anxiety_level: 2},
+            {study_hours: 2, exam_score: 48, anxiety_level: 8},
+            {study_hours: 5, exam_score: 70, anxiety_level: 4},
+            {study_hours: 7, exam_score: 80, anxiety_level: 3},
+            {study_hours: 6, exam_score: 76, anxiety_level: 3},
+            {study_hours: 4, exam_score: 58, anxiety_level: 6},
+            {study_hours: 8, exam_score: 88, anxiety_level: 2},
+            {study_hours: 3, exam_score: 52, anxiety_level: 7},
+            {study_hours: 7, exam_score: 82, anxiety_level: 3},
+            {study_hours: 5, exam_score: 71, anxiety_level: 4},
+            {study_hours: 9, exam_score: 94, anxiety_level: 1},
+            {study_hours: 6, exam_score: 77, anxiety_level: 3},
+            {study_hours: 4, exam_score: 63, anxiety_level: 5},
+            {study_hours: 8, exam_score: 84, anxiety_level: 3}
         ];
         updateColumnsAndUI();
     }
+    
     loadDemo();
 </script>
 </body>
