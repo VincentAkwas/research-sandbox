@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PsycheResearch Ultra</title>
+<title>PsycheResearch FINAL</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
-body{font-family:Segoe UI;background:#eef2f7;padding:25px;}
+body{font-family:Segoe UI;background:#eef2f7;padding:20px;}
 .container{max-width:1200px;margin:auto;}
 
 .section{
@@ -19,11 +19,8 @@ margin-bottom:20px;
 box-shadow:0 4px 12px rgba(0,0,0,0.05);
 }
 
-textarea,select,input{
-width:100%;
-padding:10px;
-border-radius:10px;
-border:1px solid #ddd;
+textarea,select{
+width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;
 }
 
 button{
@@ -31,22 +28,18 @@ background:#4f46e5;color:white;padding:10px;border:none;border-radius:10px;
 cursor:pointer;margin-top:10px;
 }
 
-.chat{
-padding:15px;border-radius:12px;background:#ecfeff;margin-top:15px;
-}
-
+.chat{background:#ecfeff;padding:15px;border-radius:12px;margin-top:10px;}
 .error{background:#fee2e2;}
 
-table{width:100%;border-collapse:collapse;margin-top:15px;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
-th{background:#f8fafc;}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h2>🧠 PsycheResearch ULTRA</h2>
+<h2>🧠 PsycheResearch FINAL SYSTEM</h2>
 
 <div class="section">
 <textarea id="dataInput" placeholder="x1,x2,y&#10;1,2,3&#10;2,3,5"></textarea>
@@ -54,192 +47,203 @@ th{background:#f8fafc;}
 </div>
 
 <div class="section">
-<h3>Variables</h3>
 <div id="xVars"></div>
 <select id="yVar"></select>
-<button onclick="runRegression()">Run Full Regression</button>
+<button onclick="runRegression()">Run Analysis</button>
+<button onclick="downloadReport()">Download Report</button>
 </div>
 
 <div class="section">
-<h3>📊 Results</h3>
+<h3>🤖 Interpretation</h3>
 <div id="output"></div>
+</div>
+
+<div class="section">
+<h3>📊 Regression Table</h3>
 <div id="table"></div>
 </div>
 
 <div class="section">
+<h3>📈 ANOVA</h3>
+<div id="anova"></div>
+</div>
+
+<div class="section">
 <canvas id="chart"></canvas>
+<canvas id="residualChart"></canvas>
 </div>
 
 </div>
 
 <script>
 
-// ---------- DATA ----------
-let data=[];
+let data=[], lastResults={};
 
+// ---------- LOAD ----------
 function loadData(){
-    Papa.parse(document.getElementById('dataInput').value,{
-        header:true,
-        dynamicTyping:true,
-        complete:res=>{
-            data=res.data.filter(r=>Object.values(r).length);
-            setup();
-        }
-    });
+Papa.parse(document.getElementById('dataInput').value,{
+header:true,dynamicTyping:true,
+complete:res=>{
+data=res.data.filter(r=>Object.values(r).length);
+setup();
+}});
 }
 
 function setup(){
-    let cols=Object.keys(data[0]);
-    let xHTML='', ySel=document.getElementById('yVar');
-
-    ySel.innerHTML='';
-    cols.forEach(c=>{
-        xHTML+=`<label><input type="checkbox" value="${c}"> ${c}</label><br>`;
-        ySel.add(new Option(c,c));
-    });
-    document.getElementById('xVars').innerHTML=xHTML;
+let cols=Object.keys(data[0]);
+let xHTML='', ySel=document.getElementById('yVar');
+ySel.innerHTML='';
+cols.forEach(c=>{
+xHTML+=`<label><input type="checkbox" value="${c}"> ${c}</label><br>`;
+ySel.add(new Option(c,c));
+});
+document.getElementById('xVars').innerHTML=xHTML;
 }
 
 // ---------- MATRIX ----------
 function transpose(m){return m[0].map((_,i)=>m.map(r=>r[i]));}
-
 function multiply(a,b){
-    return a.map(r=>transpose(b).map(c=>r.reduce((s,v,i)=>s+v*c[i],0)));
+return a.map(r=>transpose(b).map(c=>r.reduce((s,v,i)=>s+v*c[i],0)));
 }
-
-// Gauss-Jordan inverse
 function inverse(m){
-    let n=m.length;
-    let I = m.map((r,i)=>r.map((_,j)=>i===j?1:0));
-    let M = m.map((r,i)=>r.concat(I[i]));
+let n=m.length;
+let I=m.map((r,i)=>r.map((_,j)=>i===j?1:0));
+let M=m.map((r,i)=>r.concat(I[i]));
 
-    for(let i=0;i<n;i++){
-        let diag=M[i][i];
-        for(let j=0;j<2*n;j++) M[i][j]/=diag;
-
-        for(let k=0;k<n;k++){
-            if(k!==i){
-                let factor=M[k][i];
-                for(let j=0;j<2*n;j++)
-                    M[k][j]-=factor*M[i][j];
-            }
-        }
-    }
-    return M.map(r=>r.slice(n));
+for(let i=0;i<n;i++){
+let diag=M[i][i];
+for(let j=0;j<2*n;j++) M[i][j]/=diag;
+for(let k=0;k<n;k++){
+if(k!==i){
+let f=M[k][i];
+for(let j=0;j<2*n;j++) M[k][j]-=f*M[i][j];
+}}}
+return M.map(r=>r.slice(n));
 }
 
 // ---------- REGRESSION ----------
 function runRegression(){
 
-    const yVar=document.getElementById('yVar').value;
-    const xVars=[...document.querySelectorAll('#xVars input:checked')].map(x=>x.value);
+const yVar=document.getElementById('yVar').value;
+const xVars=[...document.querySelectorAll('#xVars input:checked')].map(x=>x.value);
 
-    if(xVars.length===0) return show("Select predictors","error");
+if(!xVars.length) return show("Select predictors","error");
 
-    let X=data.map(r=>[1,...xVars.map(v=>r[v])]);
-    let Y=data.map(r=>[r[yVar]]);
+let X=data.map(r=>[1,...xVars.map(v=>r[v])]);
+let Y=data.map(r=>[r[yVar]]);
 
-    let Xt=transpose(X);
-    let XtX=multiply(Xt,X);
-    let XtX_inv=inverse(XtX);
-    let XtY=multiply(Xt,Y);
-    let B=multiply(XtX_inv,XtY);
+let Xt=transpose(X);
+let B=multiply(multiply(inverse(multiply(Xt,X)),Xt),Y);
 
-    let preds=X.map(r=>r.reduce((s,v,i)=>s+v*B[i][0],0));
-    let yVals=Y.map(v=>v[0]);
-    let mean=yVals.reduce((a,b)=>a+b)/yVals.length;
+let preds=X.map(r=>r.reduce((s,v,i)=>s+v*B[i][0],0));
+let yVals=Y.map(v=>v[0]);
+let mean=yVals.reduce((a,b)=>a+b)/yVals.length;
 
-    let ssTot=yVals.reduce((s,v)=>s+(v-mean)**2,0);
-    let ssRes=yVals.reduce((s,v,i)=>s+(v-preds[i])**2,0);
+let ssTot=yVals.reduce((s,v)=>s+(v-mean)**2,0);
+let ssRes=yVals.reduce((s,v,i)=>s+(v-preds[i])**2,0);
+let ssReg=ssTot-ssRes;
 
-    let r2=1-ssRes/ssTot;
-    let adjR2=1-(1-r2)*(yVals.length-1)/(yVals.length-xVars.length-1);
+let r2=1-ssRes/ssTot;
+let n=yVals.length;
+let k=xVars.length;
 
-    // variance
-    let sigma2=ssRes/(yVals.length-xVars.length-1);
-    let se = XtX_inv.map((r,i)=>Math.sqrt(r[i]*sigma2));
+let mse=ssRes/(n-k-1);
 
-    // t + p approx
-    let tvals=B.map((b,i)=>b[0]/se[i]);
-    let pvals=tvals.map(t=>2*(1-normalCDF(Math.abs(t))));
+lastResults={r2,B,xVars,yVar};
 
-    // ---------- OUTPUT ----------
-    show(`
-    📊 Model explains ${(r2*100).toFixed(1)}% variance<br>
-    Adjusted R² = ${adjR2.toFixed(3)}<br><br>
-    🧠 Strong predictors identified
-    `);
+show(`Model explains ${(r2*100).toFixed(1)}% variance`);
 
-    // TABLE
-    let table=`<table><tr><th>Variable</th><th>Coef</th><th>SE</th><th>t</th><th>p</th></tr>`;
-    ['Intercept',...xVars].forEach((v,i)=>{
-        table+=`<tr>
-        <td>${v}</td>
-        <td>${B[i][0].toFixed(3)}</td>
-        <td>${se[i].toFixed(3)}</td>
-        <td>${tvals[i].toFixed(2)}</td>
-        <td>${pvals[i].toFixed(4)} ${stars(pvals[i])}</td>
-        </tr>`;
-    });
-    table+=`</table>`;
-    document.getElementById('table').innerHTML=table;
-
-    drawChart(X,Y,B,xVars,yVar);
+buildTable(B,xVars);
+buildANOVA(ssReg,ssRes,n,k,mse);
+drawCharts(X,Y,B,xVars,yVar,preds);
 }
 
-// ---------- UTILS ----------
+// ---------- TABLE ----------
+function buildTable(B,xVars){
+let html=`<table><tr><th>Variable</th><th>Coef</th></tr>`;
+['Intercept',...xVars].forEach((v,i)=>{
+html+=`<tr><td>${v}</td><td>${B[i][0].toFixed(3)}</td></tr>`;
+});
+html+=`</table>`;
+document.getElementById('table').innerHTML=html;
+}
+
+// ---------- ANOVA ----------
+function buildANOVA(ssReg,ssRes,n,k,mse){
+let msr=ssReg/k;
+let f=msr/mse;
+
+document.getElementById('anova').innerHTML=`
+<table>
+<tr><th>Source</th><th>SS</th><th>df</th><th>MS</th></tr>
+<tr><td>Regression</td><td>${ssReg.toFixed(2)}</td><td>${k}</td><td>${msr.toFixed(2)}</td></tr>
+<tr><td>Error</td><td>${ssRes.toFixed(2)}</td><td>${n-k-1}</td><td>${mse.toFixed(2)}</td></tr>
+</table>
+F = ${f.toFixed(2)}
+`;
+}
+
+// ---------- CHARTS ----------
+let chart,resChart;
+
+function drawCharts(X,Y,B,xVars,yVar,preds){
+
+if(chart) chart.destroy();
+if(resChart) resChart.destroy();
+
+let yVals=Y.map(v=>v[0]);
+
+if(xVars.length===1){
+let x=X.map(r=>r[1]);
+
+chart=new Chart(document.getElementById('chart'),{
+type:'scatter',
+data:{
+datasets:[
+{data:x.map((v,i)=>({x:v,y:yVals[i]}))},
+{
+type:'line',
+data:[
+{x:Math.min(...x), y:B[0][0]+B[1][0]*Math.min(...x)},
+{x:Math.max(...x), y:B[0][0]+B[1][0]*Math.max(...x)}
+]
+}]
+}
+});
+}
+
+// residual plot
+resChart=new Chart(document.getElementById('residualChart'),{
+type:'scatter',
+data:{
+datasets:[
+{
+label:'Residuals',
+data:yVals.map((v,i)=>({x:preds[i],y:v-preds[i]}))
+}
+]
+}
+});
+}
+
+// ---------- EXPORT ----------
+function downloadReport(){
+let html=`
+<h1>PsycheResearch Report</h1>
+<p>R²: ${(lastResults.r2*100).toFixed(1)}%</p>
+<p>Variables: ${lastResults.xVars.join(", ")}</p>
+`;
+let blob=new Blob([html],{type:'text/html'});
+let a=document.createElement('a');
+a.href=URL.createObjectURL(blob);
+a.download="report.html";
+a.click();
+}
+
+// ---------- UTIL ----------
 function show(msg,type="ok"){
-    document.getElementById('output').innerHTML=
-    `<div class="chat ${type==='error'?'error':''}">${msg}</div>`;
-}
-
-function stars(p){
-    if(p<0.001) return "***";
-    if(p<0.01) return "**";
-    if(p<0.05) return "*";
-    return "";
-}
-
-// Normal CDF approximation
-function normalCDF(x){
-    return (1+erf(x/Math.sqrt(2)))/2;
-}
-
-function erf(x){
-    let sign = (x>=0)?1:-1;
-    x=Math.abs(x);
-    let a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
-    let t=1/(1+p*x);
-    let y=1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
-    return sign*y;
-}
-
-// ---------- CHART ----------
-let chart;
-function drawChart(X,Y,B,xVars,yVar){
-
-    if(xVars.length!==1) return; // only for 1 predictor
-
-    let x=X.map(r=>r[1]);
-    let y=Y.map(r=>r[0]);
-
-    if(chart) chart.destroy();
-
-    chart=new Chart(document.getElementById('chart'),{
-        type:'scatter',
-        data:{
-            datasets:[
-                {data:x.map((v,i)=>({x:v,y:y[i]}))},
-                {
-                    type:'line',
-                    data:[
-                        {x:Math.min(...x), y:B[0][0]+B[1][0]*Math.min(...x)},
-                        {x:Math.max(...x), y:B[0][0]+B[1][0]*Math.max(...x)}
-                    ]
-                }
-            ]
-        }
-    });
+document.getElementById('output').innerHTML=
+`<div class="chat ${type==='error'?'error':''}">${msg}</div>`;
 }
 
 </script>
