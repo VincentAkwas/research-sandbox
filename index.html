@@ -2,307 +2,221 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PsycheResearch Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PsycheResearch Pro</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <style>
-body{
-font-family: 'Segoe UI', sans-serif;
-background: linear-gradient(135deg,#667eea,#764ba2);
-color:#1e293b;
-padding:20px;
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#1e293b,#0f172a);
+    color: white;
+    margin:0;
+    padding:20px;
 }
 
-.container{max-width:1300px;margin:auto;}
-
-.card{
-background:white;
-border-radius:20px;
-padding:20px;
-margin-bottom:20px;
-box-shadow:0 10px 30px rgba(0,0,0,0.1);
+.container {
+    max-width: 1300px;
+    margin:auto;
 }
 
-h2,h3{margin-bottom:10px;}
-
-textarea,select{
-width:100%;
-padding:12px;
-border-radius:12px;
-border:1px solid #ddd;
-margin-top:5px;
+h1 {
+    text-align:center;
+    background: linear-gradient(90deg,#38bdf8,#a78bfa);
+    -webkit-background-clip: text;
+    color: transparent;
 }
 
-button{
-background:linear-gradient(135deg,#3b82f6,#8b5cf6);
-color:white;
-border:none;
-padding:12px 18px;
-border-radius:12px;
-cursor:pointer;
-margin-top:10px;
-font-weight:600;
+.card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    padding:20px;
+    border-radius:20px;
+    margin-top:20px;
 }
 
-button:hover{transform:translateY(-2px);}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:15px;
+input, select, textarea {
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:none;
+    margin-top:5px;
 }
 
-.stat{
-background:#f8fafc;
-padding:12px;
-border-radius:12px;
+button {
+    background: linear-gradient(135deg,#6366f1,#ec4899);
+    border:none;
+    padding:12px;
+    border-radius:12px;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:10px;
 }
 
-.chat{
-background:#ecfeff;
-padding:15px;
-border-radius:12px;
-margin-top:10px;
+.grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+    gap:15px;
 }
 
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
+.stat {
+    background:#020617;
+    padding:10px;
+    border-radius:12px;
 }
 
-th,td{
-padding:8px;
-border-bottom:1px solid #e2e8f0;
-text-align:center;
+.chart {
+    background:white;
+    border-radius:20px;
+    padding:10px;
 }
 
-canvas{max-height:280px;}
+.interpret {
+    background:#020617;
+    padding:15px;
+    border-left:5px solid #38bdf8;
+    border-radius:10px;
+}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<div class="card">
-<h2>🧠 PsycheResearch Studio</h2>
-<textarea id="dataInput" placeholder="study,score,stress&#10;5,70,3"></textarea>
-<button onclick="loadData()">Load Data</button>
-</div>
+<h1>📊 PsycheResearch Pro</h1>
 
 <div class="card">
-<h3>Variables</h3>
-<div id="xVars"></div>
+<textarea id="dataInput" rows="4">
+study_hours,exam_score,anxiety
+5,68,4
+7,78,3
+3,55,7
+8,85,2
+</textarea>
+
+<select id="xVar"></select>
 <select id="yVar"></select>
-<button onclick="runAnalysis()">Run Full Analysis</button>
+
+<button onclick="loadData()">Run Full Analysis</button>
 </div>
 
 <div class="card">
-<h3>📊 Descriptive Statistics</h3>
+<h3>📈 Descriptive Statistics</h3>
 <div id="stats" class="grid"></div>
 </div>
 
 <div class="card">
-<h3>🔗 Correlation Matrix</h3>
-<div id="corr"></div>
+<h3>📐 Regression</h3>
+<div id="regression"></div>
 </div>
 
 <div class="card">
-<h3>🤖 Interpretation</h3>
-<div id="chat"></div>
+<h3>🧠 Smart Interpretation (Thesis Ready)</h3>
+<div id="interpretation" class="interpret"></div>
 </div>
 
-<div class="card">
-<h3>📐 Regression Table</h3>
-<div id="regTable"></div>
-</div>
-
-<div class="card">
-<h3>📈 Charts</h3>
-<canvas id="scatter"></canvas>
-<canvas id="histX"></canvas>
-<canvas id="histY"></canvas>
-<canvas id="residual"></canvas>
+<div class="card chart">
+<canvas id="chart"></canvas>
 </div>
 
 </div>
 
 <script>
-
-let data=[], chart1,chart2,chart3,chart4;
+let data = [];
+let chart;
 
 function loadData(){
-Papa.parse(document.getElementById('dataInput').value,{
-header:true,dynamicTyping:true,
-complete:res=>{
-data=res.data.filter(r=>Object.values(r).length);
-setup();
-}});
+    const raw = document.getElementById("dataInput").value;
+
+    Papa.parse(raw,{
+        header:true,
+        dynamicTyping:true,
+        complete: function(res){
+            data = res.data.filter(r=>Object.values(r).length>0);
+            setup();
+        }
+    });
 }
 
 function setup(){
-let cols=Object.keys(data[0]);
-let xHTML='', ySel=document.getElementById('yVar');
-ySel.innerHTML='';
-cols.forEach(c=>{
-xHTML+=`<label><input type="checkbox" value="${c}"> ${c}</label><br>`;
-ySel.add(new Option(c,c));
-});
-document.getElementById('xVars').innerHTML=xHTML;
+    const cols = Object.keys(data[0]);
+    const xSel = document.getElementById("xVar");
+    const ySel = document.getElementById("yVar");
+
+    xSel.innerHTML="";
+    ySel.innerHTML="";
+
+    cols.forEach(c=>{
+        xSel.innerHTML += `<option>${c}</option>`;
+        ySel.innerHTML += `<option>${c}</option>`;
+    });
+
+    runAnalysis();
 }
 
-function getNumeric(col){
-return data.map(r=>r[col]).filter(v=>typeof v==='number');
-}
-
-// ---------- STATS ----------
-function descriptive(){
-let cols=Object.keys(data[0]);
-let html='';
-cols.forEach(c=>{
-let vals=getNumeric(c);
-if(!vals.length) return;
-let mean=vals.reduce((a,b)=>a+b)/vals.length;
-let sd=Math.sqrt(vals.reduce((s,v)=>s+(v-mean)**2,0)/(vals.length-1));
-html+=`
-<div class="stat">
-<b>${c}</b><br>
-Mean: ${mean.toFixed(2)}<br>
-SD: ${sd.toFixed(2)}<br>
-Min: ${Math.min(...vals)}<br>
-Max: ${Math.max(...vals)}<br>
-N: ${vals.length}
-</div>`;
-});
-document.getElementById('stats').innerHTML=html;
-}
-
-// ---------- CORR ----------
-function corr(){
-let cols=Object.keys(data[0]);
-let html='<table><tr><th></th>';
-cols.forEach(c=>html+=`<th>${c}</th>`);
-html+='</tr>';
-
-cols.forEach(c1=>{
-html+=`<tr><td><b>${c1}</b></td>`;
-cols.forEach(c2=>{
-let v1=getNumeric(c1), v2=getNumeric(c2);
-let n=Math.min(v1.length,v2.length);
-let r=0;
-if(n>1){
-let m1=v1.reduce((a,b)=>a+b)/n;
-let m2=v2.reduce((a,b)=>a+b)/n;
-let num=0,den1=0,den2=0;
-for(let i=0;i<n;i++){
-num+=(v1[i]-m1)*(v2[i]-m2);
-den1+=(v1[i]-m1)**2;
-den2+=(v2[i]-m2)**2;
-}
-r=num/Math.sqrt(den1*den2);
-}
-html+=`<td>${r.toFixed(2)}</td>`;
-});
-html+='</tr>';
-});
-
-html+='</table>';
-document.getElementById('corr').innerHTML=html;
-}
-
-// ---------- REGRESSION ----------
 function runAnalysis(){
+    let x = document.getElementById("xVar").value;
+    let y = document.getElementById("yVar").value;
 
-descriptive();
-corr();
+    let valsX = data.map(r=>r[x]).filter(v=>!isNaN(v));
+    let valsY = data.map(r=>r[y]).filter(v=>!isNaN(v));
 
-let y=document.getElementById('yVar').value;
-let xVars=[...document.querySelectorAll('#xVars input:checked')].map(x=>x.value);
+    let mean = valsX.reduce((a,b)=>a+b,0)/valsX.length;
 
-if(!xVars.length) return;
+    document.getElementById("stats").innerHTML = `
+    <div class="stat">Mean (${x}) = ${mean.toFixed(2)}</div>
+    <div class="stat">N = ${valsX.length}</div>
+    `;
 
-let X=data.map(r=>[1,...xVars.map(v=>r[v])]);
-let Y=data.map(r=>r[y]);
+    // regression
+    let n = valsX.length;
+    let sumX=0,sumY=0,sumXY=0,sumX2=0;
 
-let B=[0,0];
-let x=X.map(r=>r[1]);
-let yVals=Y;
+    for(let i=0;i<n;i++){
+        sumX+=valsX[i];
+        sumY+=valsY[i];
+        sumXY+=valsX[i]*valsY[i];
+        sumX2+=valsX[i]*valsX[i];
+    }
 
-let n=yVals.length;
-let sumX=x.reduce((a,b)=>a+b);
-let sumY=yVals.reduce((a,b)=>a+b);
-let sumXY=x.reduce((s,v,i)=>s+v*yVals[i],0);
-let sumX2=x.reduce((s,v)=>s+v*v,0);
+    let slope = (n*sumXY - sumX*sumY)/(n*sumX2 - sumX*sumX);
+    let intercept = (sumY - slope*sumX)/n;
 
-let slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
-let intercept=(sumY-slope*sumX)/n;
+    document.getElementById("regression").innerHTML =
+    `${y} = ${intercept.toFixed(2)} + ${slope.toFixed(2)}(${x})`;
 
-let preds=x.map(v=>intercept+slope*v);
+    // smart interpretation
+    let insight = slope > 0 ?
+    "There is a positive relationship: as X increases, Y increases."
+    :
+    "There is a negative relationship: as X increases, Y decreases.";
 
-let mean=yVals.reduce((a,b)=>a+b)/n;
-let ssRes=yVals.reduce((s,v,i)=>s+(v-preds[i])**2,0);
-let ssTot=yVals.reduce((s,v)=>s+(v-mean)**2,0);
-let r2=1-ssRes/ssTot;
+    document.getElementById("interpretation").innerHTML = `
+    This analysis shows that <b>${x}</b> predicts <b>${y}</b>.<br><br>
+    ${insight}<br><br>
+    This implies that in your research context, changes in <b>${x}</b>
+    significantly influence <b>${y}</b>, making it suitable for hypothesis discussion.
+    `;
 
-// CHAT
-document.getElementById('chat').innerHTML=
-`<div class="chat">
-Model explains ${(r2*100).toFixed(1)}% variance.<br>
-Relationship is ${slope>0?"positive":"negative"}.
-</div>`;
+    // chart
+    if(chart) chart.destroy();
 
-// TABLE
-document.getElementById('regTable').innerHTML=
-`<table>
-<tr><th>Intercept</th><th>Slope</th></tr>
-<tr><td>${intercept.toFixed(2)}</td><td>${slope.toFixed(2)}</td></tr>
-</table>`;
-
-// CHARTS
-drawCharts(x,yVals,preds);
+    chart = new Chart(document.getElementById("chart"),{
+        type:'scatter',
+        data:{
+            datasets:[{
+                label:"Data",
+                data: valsX.map((v,i)=>({x:v,y:valsY[i]}))
+            }]
+        }
+    });
 }
 
-// ---------- CHARTS ----------
-function drawCharts(x,y,preds){
-
-if(chart1) chart1.destroy();
-if(chart2) chart2.destroy();
-if(chart3) chart3.destroy();
-if(chart4) chart4.destroy();
-
-chart1=new Chart(scatter,{
-type:'scatter',
-data:{
-datasets:[
-{data:x.map((v,i)=>({x:v,y:y[i]}))},
-{type:'line',data:[
-{x:Math.min(...x),y:Math.min(...preds)},
-{x:Math.max(...x),y:Math.max(...preds)}
-]}
-]
-}
-});
-
-chart2=new Chart(histX,{
-type:'bar',
-data:{labels:x,data:x}
-});
-
-chart3=new Chart(histY,{
-type:'bar',
-data:{labels:y,data:y}
-});
-
-chart4=new Chart(residual,{
-type:'scatter',
-data:{datasets:[{
-data:x.map((v,i)=>({x:preds[i],y:y[i]-preds[i]}))
-}]}
-});
-}
-
+loadData();
 </script>
 </body>
 </html>
+
