@@ -22,78 +22,104 @@
             font-family: 'Inter', 'Segoe UI', sans-serif;
             color: #1e2a3e;
             transition: all 0.2s;
+            height: 100vh;
+            overflow: hidden;
         }
-        /* LOGIN OVERLAY */
+        /* LOGIN OVERLAY - fullscreen blocker */
         .login-overlay {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 20, 28, 0.96);
+            backdrop-filter: blur(12px);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
-            transition: opacity 0.4s;
+            z-index: 9999;
+            transition: opacity 0.35s ease;
         }
         .login-card {
             background: #ffffff;
-            border-radius: 32px;
-            width: 380px;
-            padding: 36px 32px;
+            border-radius: 40px;
+            width: 400px;
+            padding: 40px 36px;
             text-align: center;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.3);
-            animation: fadeUp 0.4s ease;
+            box-shadow: 0 30px 55px rgba(0,0,0,0.3);
+            animation: fadeUp 0.45s cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px);}
-            to { opacity: 1; transform: translateY(0);}
+            from { opacity: 0; transform: translateY(30px) scale(0.97);}
+            to { opacity: 1; transform: translateY(0) scale(1);}
         }
         .login-card i {
-            font-size: 48px;
+            font-size: 56px;
             color: #1f8a8c;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         .login-card h2 {
-            font-weight: 700;
-            margin-bottom: 8px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            font-size: 26px;
+        }
+        .login-card p {
+            font-size: 13px;
+            color: #5e7c8c;
+            margin-bottom: 24px;
         }
         .login-card input {
             width: 100%;
-            padding: 14px;
-            margin: 20px 0;
-            border: 1px solid #cfdfea;
-            border-radius: 60px;
-            font-size: 15px;
+            padding: 15px;
+            margin: 10px 0 20px 0;
+            border: 1.5px solid #e2e9f0;
+            border-radius: 50px;
+            font-size: 16px;
             text-align: center;
-            letter-spacing: 2px;
-            font-family: monospace;
+            letter-spacing: 3px;
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+            background: #fefefe;
+            transition: 0.2s;
+        }
+        .login-card input:focus {
+            outline: none;
+            border-color: #1f8a8c;
+            box-shadow: 0 0 0 3px rgba(31,138,140,0.1);
         }
         .login-btn {
             background: #1f8a8c;
             color: white;
             border: none;
             width: 100%;
-            padding: 12px;
-            border-radius: 40px;
+            padding: 14px;
+            border-radius: 60px;
             font-weight: 700;
+            font-size: 15px;
             cursor: pointer;
             transition: 0.2s;
         }
-        .login-btn:hover { background: #0e6b6d; }
+        .login-btn:hover { background: #0e6b6d; transform: translateY(-2px); }
         .error-msg {
             color: #c0392b;
-            font-size: 13px;
-            margin-top: -10px;
-            margin-bottom: 10px;
+            font-size: 12px;
+            margin-top: -12px;
+            margin-bottom: 12px;
+            font-weight: 500;
         }
         /* MAIN APP (hidden until login) */
         .app-container {
-            display: flex;
-            min-height: 100vh;
             display: none;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
         }
-        /* SPSS-LIKE SIDEBAR */
+        /* === SPSS-LIKE LAYOUT === */
+        .dashboard-layout {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
         .sidebar-spss {
             width: 280px;
             background: #2c3e44;
@@ -102,9 +128,10 @@
             flex-direction: column;
             flex-shrink: 0;
             box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+            overflow-y: auto;
         }
         .logo-area {
-            padding: 24px 20px;
+            padding: 28px 20px;
             border-bottom: 1px solid #3f5a63;
         }
         .logo-area h1 {
@@ -115,7 +142,7 @@
             gap: 10px;
         }
         .logo-area h1 i { color: #5bc0be; font-size: 26px; }
-        .logo-area p { font-size: 11px; color: #b0c4ce; margin-top: 6px; }
+        .logo-area p { font-size: 11px; color: #b0c4ce; margin-top: 6px; letter-spacing: 0.4px; }
         .sidebar-menu { flex: 1; padding: 20px 0; }
         .menu-category {
             font-size: 10px;
@@ -131,15 +158,15 @@
             gap: 12px;
             padding: 10px 20px;
             margin: 2px 8px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             transition: 0.2s;
             color: #dceef3;
         }
-        .sidebar-item i { width: 22px; }
-        .sidebar-item:hover, .sidebar-item.active { background: #1f8a8c; color: white; }
+        .sidebar-item i { width: 24px; font-size: 15px; }
+        .sidebar-item:hover, .sidebar-item.active { background: #1f8a8c; color: white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
         .status-footer {
             padding: 16px 20px;
             border-top: 1px solid #3f5a63;
@@ -147,11 +174,12 @@
             display: flex;
             justify-content: space-between;
         }
-        /* MAIN PANEL */
         .main-panel {
             flex: 1;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
             background: #f5f7fb;
+            overflow-y: auto;
         }
         .top-bar {
             background: white;
@@ -162,13 +190,14 @@
             border-bottom: 1px solid #dce5ec;
             position: sticky;
             top: 0;
-            z-index: 5;
-            background: rgba(255,255,255,0.94);
+            z-index: 10;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(4px);
         }
         .page-title { font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 8px; }
         .btn-spss {
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 8px 18px;
+            border-radius: 10px;
             border: none;
             font-weight: 600;
             font-size: 12px;
@@ -179,12 +208,12 @@
         }
         .btn-spss-primary { background: #1f8a8c; color: white; }
         .btn-spss-primary:hover { background: #0e6b6d; transform: translateY(-1px); }
-        .content-area { padding: 28px; }
-        /* CARDS */
+        .content-area { padding: 28px; flex: 1; }
+        /* cards */
         .stat-card-panel {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-radius: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
             margin-bottom: 28px;
             border: 1px solid #e2e9f0;
             overflow: hidden;
@@ -204,7 +233,7 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
         .var-field {
             flex: 1;
@@ -220,15 +249,16 @@
         }
         select, input, textarea {
             width: 100%;
-            padding: 10px 12px;
-            border-radius: 12px;
+            padding: 10px 14px;
+            border-radius: 14px;
             border: 1px solid #cfdfea;
             background: white;
             font-family: inherit;
+            font-size: 13px;
         }
         .data-table-wrapper {
             overflow-x: auto;
-            border-radius: 14px;
+            border-radius: 16px;
         }
         .stat-table {
             width: 100%;
@@ -237,83 +267,84 @@
         }
         .stat-table th {
             background: #eef3fa;
-            padding: 10px 12px;
+            padding: 10px 14px;
             font-weight: 600;
             border-bottom: 1px solid #d0ddea;
         }
         .stat-table td {
-            padding: 10px 12px;
+            padding: 10px 14px;
             border-bottom: 1px solid #ecf1f6;
         }
         .interpret-box {
             background: #f0f7fc;
             border-left: 4px solid #2c8f8f;
-            padding: 14px 18px;
-            border-radius: 12px;
+            padding: 14px 20px;
+            border-radius: 16px;
             font-size: 13px;
-            line-height: 1.6;
-            margin-top: 16px;
+            line-height: 1.65;
+            margin-top: 18px;
         }
         .sig-star { color: #1f8a8c; font-weight: 700; }
-        .empty-state { text-align: center; padding: 50px; color: #6e8b9c; }
+        .empty-state { text-align: center; padding: 55px 20px; color: #6e8b9c; }
+        .badge-num { font-family: monospace; background: #e9eff5; padding: 2px 8px; border-radius: 40px; font-size: 10px; margin-left: 6px; }
         canvas { max-height: 320px; width: 100%; margin-top: 16px; }
-        .row-flex { display: flex; gap: 20px; flex-wrap: wrap; }
-        .badge-num { font-family: monospace; background: #eef2fa; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+        .row-flex { display: flex; gap: 18px; flex-wrap: wrap; }
     </style>
 </head>
 <body>
 
-<!-- LOGIN GATE -->
+<!-- LOGIN GATE - no demo text visible -->
 <div id="loginOverlay" class="login-overlay">
     <div class="login-card">
-        <i class="fas fa-lock"></i>
-        <h2>🔐 Secure Access</h2>
-        <p style="font-size:13px; color:#5e7c8c;">Research Dashboard · Authorized entry</p>
-        <input type="password" id="accessCode" placeholder="Enter access code" autocomplete="off">
+        <i class="fas fa-chart-line"></i>
+        <h2>Statistica Nexus</h2>
+        <p>Enter secure access key</p>
+        <input type="password" id="accessCode" placeholder="•••••" autocomplete="off" maxlength="20">
         <div id="loginError" class="error-msg"></div>
-        <button class="login-btn" id="unlockBtn"><i class="fas fa-key"></i> Unlock Workspace</button>
-        <div style="margin-top: 14px; font-size: 11px; color:#aaa;">demo code: <strong>VINCE</strong></div>
+        <button class="login-btn" id="unlockBtn"><i class="fas fa-unlock-alt"></i> Unlock Workspace</button>
     </div>
 </div>
 
-<!-- MAIN APPLICATION (hidden until login) -->
+<!-- MAIN APPLICATION (hidden until valid code) -->
 <div id="mainApp" class="app-container">
-    <div class="sidebar-spss">
-        <div class="logo-area">
-            <h1><i class="fas fa-chart-line"></i> Statistica Nexus</h1>
-            <p>Research Analytics Suite</p>
-        </div>
-        <div class="sidebar-menu">
-            <div class="menu-category"><i class="fas fa-database"></i> Data Management</div>
-            <div class="sidebar-item active" data-panel="dataImport"><i class="fas fa-upload"></i> Data Input</div>
-            <div class="menu-category"><i class="fas fa-chart-simple"></i> Descriptive Stats</div>
-            <div class="sidebar-item" data-panel="descriptives"><i class="fas fa-table-list"></i> Summary Statistics</div>
-            <div class="menu-category"><i class="fas fa-flask"></i> Inferential Tests</div>
-            <div class="sidebar-item" data-panel="ttest"><i class="fas fa-balance-scale"></i> T‑Test</div>
-            <div class="sidebar-item" data-panel="anova"><i class="fas fa-layer-group"></i> One‑Way ANOVA</div>
-            <div class="sidebar-item" data-panel="chi"><i class="fas fa-th-large"></i> Chi‑Square</div>
-            <div class="sidebar-item" data-panel="corr"><i class="fas fa-link"></i> Correlation</div>
-            <div class="sidebar-item" data-panel="regression"><i class="fas fa-chart-line"></i> Linear Regression</div>
-            <div class="menu-category"><i class="fas fa-chart-pie"></i> Visualisation</div>
-            <div class="sidebar-item" data-panel="graphs"><i class="fas fa-chart-column"></i> Charts & Plots</div>
-            <div class="menu-category"><i class="fas fa-file-alt"></i> Output</div>
-            <div class="sidebar-item" data-panel="report"><i class="fas fa-print"></i> Export Report</div>
-        </div>
-        <div class="status-footer">
-            <span><i class="fas fa-database"></i> <span id="statRows">0</span> cases</span>
-            <span><i class="fas fa-table"></i> <span id="statVars">0</span> vars</span>
-        </div>
-    </div>
-
-    <div class="main-panel">
-        <div class="top-bar">
-            <div class="page-title"><i class="fas fa-chart-line" style="color:#1f8a8c;"></i> <span id="currentPanelTitle">Data Input</span></div>
-            <div class="btn-group">
-                <button class="btn-spss" id="clearAllBtn"><i class="fas fa-trash-alt"></i> Clear Data</button>
-                <button class="btn-spss btn-spss-primary" id="sampleDataBtn"><i class="fas fa-chart-simple"></i> Load Sample Dataset</button>
+    <div class="dashboard-layout">
+        <div class="sidebar-spss">
+            <div class="logo-area">
+                <h1><i class="fas fa-chart-line"></i> Statistica Nexus</h1>
+                <p>Advanced Research Suite</p>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-category"><i class="fas fa-database"></i> Data Management</div>
+                <div class="sidebar-item active" data-panel="dataImport"><i class="fas fa-upload"></i> Data Input</div>
+                <div class="menu-category"><i class="fas fa-chart-simple"></i> Descriptive</div>
+                <div class="sidebar-item" data-panel="descriptives"><i class="fas fa-table-list"></i> Summary Stats</div>
+                <div class="menu-category"><i class="fas fa-flask"></i> Inferential Tests</div>
+                <div class="sidebar-item" data-panel="ttest"><i class="fas fa-balance-scale"></i> T‑Test</div>
+                <div class="sidebar-item" data-panel="anova"><i class="fas fa-layer-group"></i> One‑Way ANOVA</div>
+                <div class="sidebar-item" data-panel="chi"><i class="fas fa-th-large"></i> Chi‑Square</div>
+                <div class="sidebar-item" data-panel="corr"><i class="fas fa-link"></i> Correlation</div>
+                <div class="sidebar-item" data-panel="regression"><i class="fas fa-chart-line"></i> Linear Regression</div>
+                <div class="menu-category"><i class="fas fa-chart-pie"></i> Visualisation</div>
+                <div class="sidebar-item" data-panel="graphs"><i class="fas fa-chart-column"></i> Charts & Plots</div>
+                <div class="menu-category"><i class="fas fa-file-alt"></i> Output</div>
+                <div class="sidebar-item" data-panel="report"><i class="fas fa-print"></i> Export Report</div>
+            </div>
+            <div class="status-footer">
+                <span><i class="fas fa-database"></i> <span id="statRows">0</span> cases</span>
+                <span><i class="fas fa-table"></i> <span id="statVars">0</span> vars</span>
             </div>
         </div>
-        <div class="content-area" id="mainContent"></div>
+
+        <div class="main-panel">
+            <div class="top-bar">
+                <div class="page-title"><i class="fas fa-chart-line" style="color:#1f8a8c;"></i> <span id="currentPanelTitle">Data Input</span></div>
+                <div class="btn-group">
+                    <button class="btn-spss" id="clearAllBtn"><i class="fas fa-trash-alt"></i> Clear Data</button>
+                    <button class="btn-spss btn-spss-primary" id="sampleDataBtn"><i class="fas fa-chart-simple"></i> Load Sample Dataset</button>
+                </div>
+            </div>
+            <div class="content-area" id="mainContent"></div>
+        </div>
     </div>
 </div>
 
@@ -324,21 +355,23 @@
     let analysisLog = [];
     let activeChart = null;
 
-    // ---------- LOGIC ----------
+    // ---------- UTILITIES ----------
     function notify(msg, isError = false) {
         const toast = document.createElement('div');
         toast.style.position = 'fixed';
-        toast.style.bottom = '20px';
-        toast.style.right = '20px';
+        toast.style.bottom = '24px';
+        toast.style.right = '24px';
         toast.style.background = isError ? '#c0392b' : '#1f8a8c';
         toast.style.color = 'white';
-        toast.style.padding = '10px 20px';
-        toast.style.borderRadius = '30px';
+        toast.style.padding = '10px 22px';
+        toast.style.borderRadius = '40px';
         toast.style.fontSize = '13px';
-        toast.style.zIndex = '9999';
+        toast.style.fontWeight = '500';
+        toast.style.zIndex = '10000';
+        toast.style.boxShadow = '0 6px 14px rgba(0,0,0,0.2)';
         toast.innerText = msg;
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        setTimeout(() => toast.remove(), 2800);
     }
 
     function numericValues(col) { return (dataset[col] || []).filter(v => typeof v === 'number' && !isNaN(v)); }
@@ -356,7 +389,6 @@
     function gammaInc(a,x){ if(x<0) return 0; if(x<a+1){ let sum=1/a,del=sum; for(let i=1;i<100;i++){del*=x/(a+i); sum+=del; if(Math.abs(del)<1e-8)break;} return sum*Math.exp(-x+a*Math.log(x)-lgamma(a)); } let b=x+1-a, c=1e30, d=1/b, h=d; for(let i=1;i<100;i++){ let an=-i*(i-a); b+=2; d=an*d+b; if(Math.abs(d)<1e-30) d=1e-30; c=b+an/c; if(Math.abs(c)<1e-30) c=1e-30; d=1/d; let del=d*c; h*=del; if(Math.abs(del-1)<1e-8)break;} return 1-Math.exp(-x+a*Math.log(x)-lgamma(a))*h; }
     function fPval(F,df1,df2){ if(F<=0) return 1; const x=df2/(df2+df1*F); return incBeta(x,df2/2,df1/2); }
     function sigStar(p){ if(p<0.001) return `<span class="sig-star">p < 0.001 ***</span>`; if(p<0.01) return `<span class="sig-star">p < 0.01 **</span>`; if(p<0.05) return `<span class="sig-star">p < 0.05 *</span>`; return `<span>p = ${p.toFixed(3)} (n.s.)</span>`; }
-
     function updateSidebarStats(){ const rows=Object.keys(dataset).length?Math.max(...Object.values(dataset).map(v=>v.length)):0; document.getElementById('statRows').innerText=rows; document.getElementById('statVars').innerText=Object.keys(dataset).length; }
 
     function loadDataFromArray(dataArray, colNames){
@@ -390,9 +422,9 @@
         loadDataFromArray(sample, cols);
     }
 
-    function clearData(){ dataset={}; colTypes={}; analysisLog=[]; updateSidebarStats(); refreshAllSelectors(); renderActivePanel('dataImport'); notify("Data cleared."); }
+    function clearData(){ dataset={}; colTypes={}; analysisLog=[]; updateSidebarStats(); refreshAllSelectors(); renderActivePanel('dataImport'); notify("All data cleared."); }
 
-    function refreshAllSelectors(){ /* dynamic rebuilds when panels switch */ }
+    function refreshAllSelectors(){ /* dynamic UI uses fresh dataset */ }
 
     function renderActivePanel(panelId){
         const container = document.getElementById('mainContent');
@@ -405,7 +437,8 @@
         else if(panelId === 'regression') container.innerHTML = renderRegUI();
         else if(panelId === 'graphs') container.innerHTML = renderGraphsUI();
         else if(panelId === 'report') container.innerHTML = renderReportUI();
-        document.getElementById('currentPanelTitle').innerText = document.querySelector(`.sidebar-item[data-panel="${panelId}"]`)?.innerText?.trim() || panelId;
+        const titleElem = document.querySelector(`.sidebar-item[data-panel="${panelId}"]`);
+        if(titleElem) document.getElementById('currentPanelTitle').innerText = titleElem.innerText.trim();
         attachPanelEvents(panelId);
     }
 
@@ -416,20 +449,19 @@
         if(panelId === 'corr') document.getElementById('runCorrBtn')?.addEventListener('click',runCorrelation);
         if(panelId === 'regression') document.getElementById('runRegBtn')?.addEventListener('click',runRegression);
         if(panelId === 'graphs') document.getElementById('genChartBtn')?.addEventListener('click',generateChart);
-        if(panelId === 'report') document.getElementById('copyReportBtn')?.addEventListener('click',()=>{ const txt=analysisLog.map(l=>`${l.title}: ${l.summary}`).join('\n'); navigator.clipboard.writeText(txt); notify("Report copied"); });
-        // file upload & paste events
+        if(panelId === 'report') document.getElementById('copyReportBtn')?.addEventListener('click',()=>{ const txt=analysisLog.map(l=>`${l.title}: ${l.summary}`).join('\n'); navigator.clipboard.writeText(txt); notify("Report copied to clipboard"); });
         const fileUp = document.getElementById('excelFileInput');
         if(fileUp) fileUp.onchange = (e) => { const f=e.target.files[0]; if(!f) return; const reader=new FileReader(); reader.onload=ev=>{ const data=Papa.parse(ev.target.result,{header:true,skipEmptyLines:true}).data; if(data.length) loadDataFromArray(data, Object.keys(data[0])); }; reader.readAsText(f); };
         const pasteLoad = document.getElementById('loadPasteBtn');
         if(pasteLoad) pasteLoad.onclick = () => { const txt=document.getElementById('csvPasteArea')?.value; if(txt){ const res=Papa.parse(txt,{header:true,skipEmptyLines:true}); if(res.data.length) loadDataFromArray(res.data, res.meta.fields); } };
     }
 
-    // ------------------ UI COMPONENTS ------------------
-    function renderDataInput(){ return `<div class="stat-card-panel"><div class="card-header-spss">Data Import</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>📁 Upload CSV/Excel</label><input type="file" id="excelFileInput" accept=".csv,.xlsx"></div><div class="var-field"><label>✏️ Paste CSV</label><textarea id="csvPasteArea" rows="3" placeholder="Age,Score,Group&#10;25,78,Control"></textarea><button id="loadPasteBtn" class="btn-spss btn-spss-primary" style="margin-top:8px;">Load Data</button></div></div>${Object.keys(dataset).length? `<div class="data-table-wrapper"><table class="stat-table"><thead><tr>${Object.keys(dataset).map(c=>`<th>${c}<span class="badge-num">${colTypes[c]}</span></th>`).join('')}</tr></thead><tbody>${Array.from({length:Math.min(5,Math.max(...Object.values(dataset).map(v=>v.length)))},(_,i)=>`<tr>${Object.keys(dataset).map(c=>`<td>${dataset[c][i]??'—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:`<div class="empty-state"><i class="fas fa-cloud-upload-alt"></i> No dataset. Upload or use sample.</div>`}</div></div>`; }
+    // ----- UI components -----
+    function renderDataInput(){ return `<div class="stat-card-panel"><div class="card-header-spss">📂 Data Import</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>📁 Upload CSV/Excel</label><input type="file" id="excelFileInput" accept=".csv,.xlsx"></div><div class="var-field"><label>✏️ Paste CSV Data</label><textarea id="csvPasteArea" rows="3" placeholder="Age,Score,Group&#10;25,78,Control"></textarea><button id="loadPasteBtn" class="btn-spss btn-spss-primary" style="margin-top:8px;">Parse & Load</button></div></div>${Object.keys(dataset).length? `<div class="data-table-wrapper"><table class="stat-table"><thead><tr>${Object.keys(dataset).map(c=>`<th>${c}<span class="badge-num">${colTypes[c]}</span></th>`).join('')}</tr></thead><tbody>${Array.from({length:Math.min(5,Math.max(...Object.values(dataset).map(v=>v.length)))},(_,i)=>`<tr>${Object.keys(dataset).map(c=>`<td>${dataset[c][i]??'—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`:`<div class="empty-state"><i class="fas fa-cloud-upload-alt"></i> No dataset. Upload file or load sample.</div>`}</div></div>`; }
 
-    function renderDescriptives(){ if(!Object.keys(dataset).length) return `<div class="stat-card-panel"><div class="empty-state">Load data first</div></div>`; let html=`<div class="stat-card-panel"><div class="card-header-spss">Descriptive Statistics</div><div class="card-body"><div class="data-table-wrapper"><table class="stat-table"><thead><tr><th>Variable</th><th>N</th><th>Mean</th><th>Median</th><th>SD</th><th>Min</th><th>Max</th><th>IQR</th></tr></thead><tbody>`; Object.keys(dataset).filter(c=>colTypes[c]==='numeric').forEach(c=>{ let v=numericValues(c); if(v.length) html+=`<tr><td><b>${c}</b></td><td>${v.length}</td><td>${mean(v).toFixed(2)}</td><td>${median(v).toFixed(2)}</td><td>${sd(v).toFixed(2)}</td><td>${Math.min(...v).toFixed(2)}</td><td>${Math.max(...v).toFixed(2)}</td><td>${iqr(v).toFixed(2)}</td></tr>`; }); html+=`</tbody></table></div></div></div>`; return html; }
+    function renderDescriptives(){ if(!Object.keys(dataset).length) return `<div class="stat-card-panel"><div class="empty-state">Load data first</div></div>`; let html=`<div class="stat-card-panel"><div class="card-header-spss">Descriptive Statistics</div><div class="card-body"><div class="data-table-wrapper"><table class="stat-table"><thead><tr><th>Variable</th><th>N</th><th>Mean</th><th>Median</th><th>SD</th><th>Min</th><th>Max</th><th>IQR</th></tr></thead><tbody>`; Object.keys(dataset).filter(c=>colTypes[c]==='numeric').forEach(c=>{ let v=numericValues(c); if(v.length) html+=`<tr><td><b>${c}</b></td><td>${v.length}</td><td>${mean(v).toFixed(2)}</td><td>${median(v).toFixed(2)}</td><td>${sd(v).toFixed(2)}</td><td>${Math.min(...v).toFixed(2)}</td><td>${Math.max(...v).toFixed(2)}</td><td>${iqr(v).toFixed(2)}</td></tr>`; }); html+=`</tbody>}</div></div></div>`; return html; }
 
-    function runTtest(){ const col=document.getElementById('ttestNumeric')?.value; const mu=parseFloat(document.getElementById('testMu')?.value||0); if(!col){notify("select variable",1);return;} const v=numericValues(col); if(v.length<2)return; const t=(mean(v)-mu)/(sd(v)/Math.sqrt(v.length)); const df=v.length-1; const p=tPval(t,df)*2; document.getElementById('ttestResultArea').innerHTML=`<div class="interpret-box"><strong>One‑Sample T‑Test</strong><br>t(${df}) = ${t.toFixed(3)}, ${sigStar(p)}<br>Mean difference = ${(mean(v)-mu).toFixed(3)}<br>95% CI [${(mean(v)-1.96*sd(v)/Math.sqrt(v.length)).toFixed(2)}, ${(mean(v)+1.96*sd(v)/Math.sqrt(v.length)).toFixed(2)}]</div>`; analysisLog.push({title:"T-Test", summary:`${col}: t=${t.toFixed(3)}, p=${p.toFixed(4)}`}); }
+    function runTtest(){ const col=document.getElementById('ttestNumeric')?.value; const mu=parseFloat(document.getElementById('testMu')?.value||0); if(!col){notify("Select variable",1);return;} const v=numericValues(col); if(v.length<2) return; const t=(mean(v)-mu)/(sd(v)/Math.sqrt(v.length)); const df=v.length-1; const p=tPval(t,df)*2; document.getElementById('ttestResultArea').innerHTML=`<div class="interpret-box"><strong>One‑Sample T‑Test</strong><br>t(${df}) = ${t.toFixed(3)}, ${sigStar(p)}<br>Mean diff = ${(mean(v)-mu).toFixed(3)}<br>95% CI [${(mean(v)-1.96*sd(v)/Math.sqrt(v.length)).toFixed(2)}, ${(mean(v)+1.96*sd(v)/Math.sqrt(v.length)).toFixed(2)}]</div>`; analysisLog.push({title:"T-Test", summary:`${col}: t=${t.toFixed(3)}, p=${p.toFixed(4)}`}); }
     function runAnova(){ const dv=document.getElementById('anovaDV')?.value, iv=document.getElementById('anovaIV')?.value; if(!dv||!iv)return; const groups=[...new Set(dataset[iv])]; const grpData=groups.map(g=>({name:g,vals:dataset[dv].filter((_,i)=>dataset[iv][i]===g).map(v=>+v).filter(v=>!isNaN(v))})).filter(g=>g.vals.length); const all=grpData.flatMap(g=>g.vals); const gm=mean(all); const ssB=grpData.reduce((s,g)=>s+g.vals.length*(mean(g.vals)-gm)**2,0); const ssW=grpData.reduce((s,g)=>s+g.vals.reduce((a,v)=>a+(v-mean(g.vals))**2,0),0); const dfB=grpData.length-1, dfW=all.length-grpData.length; const F=(ssB/dfB)/(ssW/dfW); const p=fPval(F,dfB,dfW); document.getElementById('anovaResultArea').innerHTML=`<div class="interpret-box"><strong>One‑Way ANOVA</strong><br>F(${dfB}, ${dfW}) = ${F.toFixed(3)}, ${sigStar(p)}<br>η² = ${(ssB/(ssB+ssW)).toFixed(3)}</div>`; analysisLog.push({title:"ANOVA", summary:`F(${dfB},${dfW})=${F.toFixed(3)}, p=${p.toFixed(4)}`}); }
     function runChiSquare(){ const v1=document.getElementById('chiVar1')?.value, v2=document.getElementById('chiVar2')?.value; if(!v1||!v2)return; const cats1=[...new Set(dataset[v1])], cats2=[...new Set(dataset[v2])]; let obs={}, n=dataset[v1].length, rowTot={}, colTot={}; cats1.forEach(r=>{obs[r]={};cats2.forEach(c=>obs[r][c]=0;}); for(let i=0;i<n;i++){ let r=dataset[v1][i],c=dataset[v2][i]; if(obs[r]&&obs[r][c]!==undefined) obs[r][c]++;} cats1.forEach(r=>rowTot[r]=cats2.reduce((a,c)=>a+obs[r][c],0)); cats2.forEach(c=>colTot[c]=cats1.reduce((a,r)=>a+obs[r][c],0)); let chi=0; cats1.forEach(r=>cats2.forEach(c=>{ let exp=(rowTot[r]*colTot[c])/n; if(exp>0) chi+=(obs[r][c]-exp)**2/exp; })); const df=(cats1.length-1)*(cats2.length-1); const p=chiPval(chi,df); document.getElementById('chiResultArea').innerHTML=`<div class="interpret-box"><strong>Chi‑Square Test</strong><br>χ²(${df}) = ${chi.toFixed(3)}, ${sigStar(p)}<br>Cramér's V = ${Math.sqrt(chi/(n*Math.min(cats1.length-1,cats2.length-1))).toFixed(3)}</div>`; analysisLog.push({title:"Chi-Square", summary:`χ²=${chi.toFixed(2)}, p=${p.toFixed(4)}`}); }
     function runCorrelation(){ const x=document.getElementById('corrX')?.value, y=document.getElementById('corrY')?.value; if(!x||!y)return; let xv=numericValues(x), yv=numericValues(y); let n=Math.min(xv.length,yv.length); xv=xv.slice(0,n); yv=yv.slice(0,n); const mx=mean(xv),my=mean(yv); const num=xv.reduce((s,xi,i)=>s+(xi-mx)*(yv[i]-my),0); const den=Math.sqrt(xv.reduce((s,xi)=>s+(xi-mx)**2,0)*yv.reduce((s,yi)=>s+(yi-my)**2,0)); const r=den===0?0:num/den; const t=r*Math.sqrt((n-2)/(1-r**2)); const p=tPval(t,n-2)*2; document.getElementById('corrResultArea').innerHTML=`<div class="interpret-box"><strong>Pearson r</strong><br>r = ${r.toFixed(4)}, ${sigStar(p)}<br>r² = ${(r*r).toFixed(4)} (${(r*r*100).toFixed(1)}% shared variance)</div>`; analysisLog.push({title:"Correlation", summary:`r(${n-2})=${r.toFixed(3)}, p=${p.toFixed(4)}`}); }
@@ -438,62 +470,79 @@
     function generateChart(){
         const varName = document.getElementById('chartVariable')?.value;
         const chartType = document.getElementById('chartTypeSelect')?.value;
-        if(!varName || !dataset[varName]) return;
+        if(!varName || !dataset[varName]) { notify("Select a valid variable",1); return; }
         const vals = numericValues(varName);
         if(vals.length === 0) { notify("Not enough numeric data",1); return; }
         const ctx = document.getElementById('statCanvas').getContext('2d');
         if(activeChart) activeChart.destroy();
         if(chartType === 'histogram'){
-            const bins = Math.min(12, Math.ceil(Math.sqrt(vals.length)));
-            const minV = Math.min(...vals), maxV = Math.max(...vals);
-            const step = (maxV-minV)/bins;
+            const bins = Math.min(12, Math.max(5, Math.ceil(Math.sqrt(vals.length))));
+            const minV = Math.min(...vals), maxV = Math.max(...vals), step = (maxV-minV)/bins;
             let counts = new Array(bins).fill(0);
             vals.forEach(v=>{ let idx = Math.min(bins-1, Math.floor((v-minV)/step)); if(idx>=0) counts[idx]++; });
             activeChart = new Chart(ctx, { type: 'bar', data: { labels: Array.from({length:bins},(_,i)=>`${(minV+i*step).toFixed(1)}`), datasets: [{ label: varName, data: counts, backgroundColor: '#3498db', borderRadius: 8 }] } });
         } else if(chartType === 'boxplot'){
             const q1v = q1(vals), med = median(vals), q3v = q3(vals), minV = Math.min(...vals), maxV = Math.max(...vals);
             activeChart = new Chart(ctx, { type: 'bar', data: { labels: ['Min','Q1','Median','Q3','Max'], datasets: [{ label: varName, data: [minV, q1v, med, q3v, maxV], backgroundColor: '#2c8f8f' }] } });
-        } else if(chartType === 'scatter' && document.getElementById('scatterY')){ 
-            const yvar = document.getElementById('scatterY').value;
+        } else if(chartType === 'scatter'){ 
+            const yvar = document.getElementById('scatterYVar')?.value;
             if(yvar && dataset[yvar]){
                 const yvals = numericValues(yvar);
-                const pairs = vals.map((v,i)=>({x:v, y:yvals[i]})).filter(p=>!isNaN(p.x) && !isNaN(p.y));
-                activeChart = new Chart(ctx, { type: 'scatter', data: { datasets: [{ label: `${varName} vs ${yvar}`, data: pairs, backgroundColor: '#f39c12', pointRadius: 6 }] }, options: { responsive: true } });
-            } else notify("Select Y for scatter",1);
+                const pairs = vals.slice(0,Math.min(vals.length,yvals.length)).map((v,i)=>({x:v, y:yvals[i]})).filter(p=>!isNaN(p.x) && !isNaN(p.y));
+                if(pairs.length) activeChart = new Chart(ctx, { type: 'scatter', data: { datasets: [{ label: `${varName} vs ${yvar}`, data: pairs, backgroundColor: '#f39c12', pointRadius: 5 }] }, options: { responsive: true } });
+                else notify("Insufficient pairs",1);
+            } else notify("Select Y variable for scatter",1);
         }
     }
 
     function renderGraphsUI(){
         const numCols = Object.keys(dataset).filter(c=>colTypes[c]==='numeric');
-        return `<div class="stat-card-panel"><div class="card-header-spss">📊 Advanced Chart Builder</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>Variable (X)</label><select id="chartVariable">${numCols.map(c=>`<option>${c}</option>`).join('')}</select></div><div class="var-field"><label>Chart Type</label><select id="chartTypeSelect"><option value="histogram">Histogram</option><option value="boxplot">Box Plot (5‑number summary)</option></select></div></div><div class="var-selector" id="scatterYDiv" style="display:none;"></div><button id="genChartBtn" class="btn-spss btn-spss-primary">Generate Chart</button><canvas id="statCanvas" style="max-height:340px; margin-top:20px;"></canvas></div></div>`;
+        return `<div class="stat-card-panel"><div class="card-header-spss">📈 Chart Builder</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>Variable</label><select id="chartVariable">${numCols.map(c=>`<option>${c}</option>`).join('')}</select></div><div class="var-field"><label>Chart Type</label><select id="chartTypeSelect"><option value="histogram">Histogram</option><option value="boxplot">Box Plot (5‑number)</option><option value="scatter">Scatter Plot (requires second var)</option></select></div></div><div id="scatterYContainer" style="margin-bottom:16px;" class="var-field" hidden><label>Y variable (scatter)</label><select id="scatterYVar">${numCols.map(c=>`<option>${c}</option>`).join('')}</select></div><button id="genChartBtn" class="btn-spss btn-spss-primary">Generate Chart</button><canvas id="statCanvas" style="max-height:330px; margin-top:20px;"></canvas></div></div>`;
     }
-    function renderTtestUI(){ const num=Object.keys(dataset).filter(c=>colTypes[c]==='numeric'); return `<div class="stat-card-panel"><div class="card-header-spss">One‑Sample T‑Test</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>Numeric variable</label><select id="ttestNumeric">${num.map(c=>`<option>${c}</option>`)}</select></div><div class="var-field"><label>Test value (μ₀)</label><input id="testMu" type="number" value="0"></div></div><button id="runTtestBtn" class="btn-spss btn-spss-primary">Compute</button><div id="ttestResultArea"></div></div></div>`; }
+    function renderTtestUI(){ const num=Object.keys(dataset).filter(c=>colTypes[c]==='numeric'); return `<div class="stat-card-panel"><div class="card-header-spss">One‑Sample T‑Test</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>Numeric variable</label><select id="ttestNumeric">${num.map(c=>`<option>${c}</option>`)}</select></div><div class="var-field"><label>Test value (μ₀)</label><input id="testMu" type="number" value="0" step="any"></div></div><button id="runTtestBtn" class="btn-spss btn-spss-primary">Compute</button><div id="ttestResultArea"></div></div></div>`; }
     function renderAnovaUI(){ const num=Object.keys(dataset).filter(c=>colTypes[c]==='numeric'), cat=Object.keys(dataset).filter(c=>colTypes[c]==='categorical'); return `<div class="stat-card-panel"><div class="card-header-spss">One‑Way ANOVA</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>Dependent (numeric)</label><select id="anovaDV">${num.map(c=>`<option>${c}</option>`)}</select></div><div class="var-field"><label>Factor (group)</label><select id="anovaIV">${cat.map(c=>`<option>${c}</option>`)}</select></div></div><button id="runAnovaBtn" class="btn-spss btn-spss-primary">Run ANOVA</button><div id="anovaResultArea"></div></div></div>`; }
     function renderChiUI(){ const cat=Object.keys(dataset).filter(c=>colTypes[c]==='categorical'); return `<div class="stat-card-panel"><div class="card-header-spss">Chi‑Square Test</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>Categorical 1</label><select id="chiVar1">${cat.map(c=>`<option>${c}</option>`)}</select></div><div class="var-field"><label>Categorical 2</label><select id="chiVar2">${cat.map(c=>`<option>${c}</option>`)}</select></div></div><button id="runChiBtn" class="btn-spss btn-spss-primary">Run Test</button><div id="chiResultArea"></div></div></div>`; }
     function renderCorrUI(){ const num=Object.keys(dataset).filter(c=>colTypes[c]==='numeric'); return `<div class="stat-card-panel"><div class="card-header-spss">Bivariate Correlation</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>Variable X</label><select id="corrX">${num.map(c=>`<option>${c}</option>`)}</select></div><div class="var-field"><label>Variable Y</label><select id="corrY">${num.map(c=>`<option>${c}</option>`)}</select></div></div><button id="runCorrBtn" class="btn-spss btn-spss-primary">Compute Correlation</button><div id="corrResultArea"></div></div></div>`; }
     function renderRegUI(){ const num=Object.keys(dataset).filter(c=>colTypes[c]==='numeric'); return `<div class="stat-card-panel"><div class="card-header-spss">Linear Regression</div><div class="card-body"><div class="var-selector"><div class="var-field"><label>Dependent Y</label><select id="regY">${num.map(c=>`<option>${c}</option>`)}</select></div><div class="var-field"><label>Independent X</label><select id="regX">${num.map(c=>`<option>${c}</option>`)}</select></div></div><button id="runRegBtn" class="btn-spss btn-spss-primary">Run Regression</button><div id="regResultArea"></div></div></div>`; }
-    function renderReportUI(){ let logHtml=analysisLog.map(l=>`<div><b>${l.title}</b>: ${l.summary}</div>`).join('')||'<div>No analyses performed yet.</div>'; return `<div class="stat-card-panel"><div class="card-header-spss">Analysis Log & Export <button id="copyReportBtn" class="btn-spss">Copy Report</button></div><div class="card-body">${logHtml}<div class="interpret-box" style="margin-top:20px;">Statistica Nexus — full research suite.</div></div></div>`; }
+    function renderReportUI(){ let logHtml=analysisLog.map(l=>`<div><b>${l.title}</b>: ${l.summary}</div>`).join('')||'<div>No analyses performed.</div>'; return `<div class="stat-card-panel"><div class="card-header-spss">Analysis Log <button id="copyReportBtn" class="btn-spss">Copy Report</button></div><div class="card-body">${logHtml}<div class="interpret-box" style="margin-top:24px;">Statistica Nexus — full research analytics suite.</div></div></div>`; }
 
-    // sidepanel nav + login
-    document.getElementById('unlockBtn').addEventListener('click',()=>{
-        const code = document.getElementById('accessCode').value.trim();
-        if(code === 'VINCE'){
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'flex';
-            loadSampleDataset();  // preload sample
-        } else { document.getElementById('loginError').innerText = 'Invalid code. Try VINCE'; }
+    // ----- LOGIC FOR LOGIN & INIT -----
+    document.getElementById('unlockBtn').addEventListener('click', (e) => {
+        const inputCode = document.getElementById('accessCode').value.trim();
+        if(inputCode === 'VINCE') {
+            const overlay = document.getElementById('loginOverlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                document.body.style.overflow = 'auto';
+                loadSampleDataset();   // instant demo data for full experience
+            }, 280);
+        } else {
+            document.getElementById('loginError').innerText = '✗ Access denied. Invalid key.';
+        }
     });
-    document.querySelectorAll('.sidebar-item').forEach(el=>{
-        el.addEventListener('click',()=>{
-            document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+
+    // Allow Enter key
+    document.getElementById('accessCode').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') document.getElementById('unlockBtn').click();
+    });
+
+    // Sidebar navigation
+    document.querySelectorAll('.sidebar-item').forEach(el => {
+        el.addEventListener('click', () => {
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
             el.classList.add('active');
             renderActivePanel(el.getAttribute('data-panel'));
         });
     });
-    // default start
-    document.getElementById('clearAllBtn')?.addEventListener('click',clearData);
-    document.getElementById('sampleDataBtn')?.addEventListener('click',loadSampleDataset);
+
+    document.getElementById('clearAllBtn')?.addEventListener('click', clearData);
+    document.getElementById('sampleDataBtn')?.addEventListener('click', loadSampleDataset);
+
+    // chart type toggle for scatter Y field
+    function watchChartType() { const sel = document.getElementById('chartTypeSelect'); if(sel) sel.addEventListener('change', (e) => { const sc = document.getElementById('scatterYContainer'); if(sc) sc.hidden = e.target.value !== 'scatter'; }); }
+    setTimeout(watchChartType, 300);
 </script>
 </body>
 </html>
-
